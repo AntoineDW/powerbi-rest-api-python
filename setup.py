@@ -1,8 +1,8 @@
-from distutils.core import setup
+import setuptools
 
-setup (
+setuptools.setup(
     name = "pbirest",
-    packages = ["pbirest"],
+    packages = setuptools.find_packages(),
     version = "0.1",
     license = "MIT",
     description = "A Python library created to easily use the Power BI REST API with Python",
