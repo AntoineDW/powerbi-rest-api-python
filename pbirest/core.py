@@ -306,9 +306,12 @@ def refresh_dataset(workspace_id: str, dataset_id: str, notify_option: str = "No
     global token
     if(not verify_token()): return None
 
-    headers = { "Authorization": token["bearer"] }
-    body = { "notifyOption": notify_option }
-    response = requests.post("https://api.powerbi.com/v1.0/myorg/groups/{}/datasets/{}/refreshes".format(workspace_id, dataset_id), headers = headers, data = body)
+    if(notify_option in ["MailOnCompletion", "MailOnFailure", "NoNotification"]):
+        headers = { "Authorization": token["bearer"] }
+        body = { "notifyOption": notify_option }
+        response = requests.post("https://api.powerbi.com/v1.0/myorg/groups/{}/datasets/{}/refreshes".format(workspace_id, dataset_id), headers = headers, data = body)
 
-    if response.status_code != HTTP_OK:
-        log.error("Error {} -- Something went wrong when trying to refresh the dataset {} in the workspace {}".format(response.status_code, dataset_id, workspace_id))
+        if response.status_code != HTTP_OK:
+            log.error("Error {} -- Something went wrong when trying to refresh the dataset {} in the workspace {}".format(response.status_code, dataset_id, workspace_id))
+    else:
+        log.error("Error 400 -- Please, make sure the notify_option parameter is either \"MailOnCompletion\", \"MailOnFailure\" or \"NoNotification\"")

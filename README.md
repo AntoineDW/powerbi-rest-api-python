@@ -1,6 +1,7 @@
 # Power BI REST API with Python
 
 A Python library created to easily use the Power BI REST API with Python.
+[See the documentation](https://github.com/AntoineDW/powerbi-rest-api-python/wiki/Documentation)
 
 ## Getting started
 
@@ -43,6 +44,10 @@ As an example, here's how you can get a list of all the workspaces that the user
 ```
 pbirest.get_workspaces()
 ```
+
+## Documentation
+
+[See the documentation](https://github.com/AntoineDW/powerbi-rest-api-python/wiki/Documentation)
 
 ## Author
 
