@@ -1,6 +1,7 @@
 import requests
 import datetime
 import logging
+import re
 
 token = { "bearer": None, "expiration": None }
 credentials = { "client_id": None, "username": None, "password": None, "tenant_id": None, "client_secret": None }
@@ -315,3 +316,49 @@ def refresh_dataset(workspace_id: str, dataset_id: str, notify_option: str = "No
             log.error("Error {} -- Something went wrong when trying to refresh the dataset {} in the workspace {}".format(response.status_code, dataset_id, workspace_id))
     else:
         log.error("Error 400 -- Please, make sure the notify_option parameter is either \"MailOnCompletion\", \"MailOnFailure\" or \"NoNotification\"")
+
+# Admin
+def get_audit_logs(start_date: str, end_date: str, activity: str = None, user_id: str = None) -> list:
+    global token
+    if(not verify_token()): return None
+
+    date_regex = r"^\d\d\d\d-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01]) (00|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$"
+    start_date_verification = re.search(date_regex, start_date)
+    end_date_verification = re.search(date_regex, end_date)
+    
+    if(start_date_verification and end_date_verification):
+        start_date_value = datetime.datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%dT%H:%M:%S.000Z")
+        end_date_value = datetime.datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%dT%H:%M:%S.000Z")
+
+        headers = { "Authorization": token["bearer"] }
+        params = ""
+
+        if activity:
+            params += "Activity eq '{}'".format(activity)
+        if user_id:
+            if params != "": params += " and "
+            params += "UserId eq '{}'".format(user_id)
+
+        if params == "": url = "https://api.powerbi.com/v1.0/myorg/admin/activityevents?startDateTime='{}'&endDateTime='{}'".format(start_date_value, end_date_value)
+        else: url = "https://api.powerbi.com/v1.0/myorg/admin/activityevents?startDateTime='{}'&endDateTime='{}'&$filter={}".format(start_date_value, end_date_value, params)
+
+        response = requests.get(url, headers = headers)
+
+        if response.status_code == HTTP_OK:
+            logs = []
+            while(response.json()["continuationUri"] != None):
+                logs += response.json()["activityEventEntities"]
+                response = requests.get(response.json()["continuationUri"], headers = headers)
+
+                if response.status_code != HTTP_OK:
+                    log.error("Error {} -- Something went wrong when trying to retrieve audit logs from {} to {}".format(response.status_code, start_date, end_date))
+                    return None
+
+            return logs
+        else:
+            log.error("Error {} -- Something went wrong when trying to retrieve audit logs from {} to {}".format(response.status_code, start_date, end_date))
+            print(response.json())
+            return None
+    else:
+        log.error("Error 400 -- Please, make sure the dates you gave match the following pattern: YYYY-MM-DD HH:MM:SS")
+        return None

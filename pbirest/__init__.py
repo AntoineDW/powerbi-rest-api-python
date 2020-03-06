@@ -22,3 +22,5 @@ from .core import get_dataset
 from .core import get_datasets
 from .core import delete_dataset
 from .core import refresh_dataset
+
+from .core import get_audit_logs
