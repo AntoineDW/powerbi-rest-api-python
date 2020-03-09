@@ -90,6 +90,7 @@ def get_workspaces() -> list:
         return response.json()["value"]
     else:
         log.error("Error {} -- Something went wrong when trying to retrieve the list of workspaces you have access".format(response.status_code))
+        return None
 
 def get_workspace(workspace_id: str) -> list:
     global token
@@ -104,6 +105,7 @@ def get_workspace(workspace_id: str) -> list:
         else: return None
     else:
         log.error("Error {} -- Something went wrong when trying to retrieve the workspace {}".format(response.status_code, workspace_id))
+        return None
 
 def create_workspace(workspace_name: str, new: bool = False) -> dict:
     global token
@@ -131,15 +133,18 @@ def create_workspace(workspace_name: str, new: bool = False) -> dict:
             log.error("Error {} -- Something went wrong when trying to create a new workspace called {}".format(response.status_code, workspace_name))
             return None
 
-def delete_workspace(workspace_id: str) -> None:
+def delete_workspace(workspace_id: str) -> dict:
     global token
     if(not verify_token()): return None
 
     headers = { "Authorization": token["bearer"] }
     response = requests.delete("https://api.powerbi.com/v1.0/myorg/groups/{}".format(workspace_id), headers = headers)
 
-    if response.status_code != HTTP_OK:
+    if response.status_code == HTTP_OK:
+        return { "response": response.status_code }
+    else:
         log.error("Error {} -- Something went wrong when trying to delete the workspace {}".format(response.status_code, workspace_id))
+        return None
 
 def get_users_in_workspace(workspace_id: str) -> list:
     global token
@@ -152,8 +157,9 @@ def get_users_in_workspace(workspace_id: str) -> list:
         return response.json()["value"]
     else:
         log.error("Error {} -- Something went wrong when trying to retrieve the list of users in the workspace {}".format(response.status_code, workspace_id))
+        return None
 
-def add_user_to_workspace(workspace_id: str, email: str, access: str = "Member") -> None:
+def add_user_to_workspace(workspace_id: str, email: str, access: str = "Member") -> dict:
     global token
     if(not verify_token()): return None
     
@@ -162,22 +168,29 @@ def add_user_to_workspace(workspace_id: str, email: str, access: str = "Member")
         body = { "userEmailAddress": email, "groupUserAccessRight": access }
         response = requests.post("https://api.powerbi.com/v1.0/myorg/groups/{}/users".format(workspace_id), headers = headers, data = body)
 
-        if response.status_code != HTTP_OK:
+        if response.status_code == HTTP_OK:
+            return { "response": response.status_code }
+        else:
             log.error("Error {} -- Something went wrong when trying to add {} in the workspace {}".format(response.status_code, email, workspace_id))
+            return None
     else:
         log.error("Error 400 -- Please, make sure the access parameter is either \"Admin\", \"Contributor\" or \"Member\"")
+        return None
 
-def delete_user_from_workspace(workspace_id: str, email: str) -> None:
+def delete_user_from_workspace(workspace_id: str, email: str) -> dict:
     global token
     if(not verify_token()): return None
 
     headers = { "Authorization": token["bearer"] }
     response = requests.delete("https://api.powerbi.com/v1.0/myorg/groups/{}/users/{}".format(workspace_id, email), headers = headers)
 
-    if response.status_code != HTTP_OK:
+    if response.status_code == HTTP_OK:
+        return { "response": response.status_code }
+    else:
         log.error("Error {} -- Something went wrong when trying to delete the user {} from the workspace {}".format(response.status_code, email, workspace_id))
+        return None
 
-def update_user_in_workspace(workspace_id: str, email: str, access: str = "Member") -> None:
+def update_user_in_workspace(workspace_id: str, email: str, access: str = "Member") -> dict:
     global token
     if(not verify_token()): return None
     
@@ -186,10 +199,14 @@ def update_user_in_workspace(workspace_id: str, email: str, access: str = "Membe
         body = { "userEmailAddress": email, "groupUserAccessRight": access }
         response = requests.put("https://api.powerbi.com/v1.0/myorg/groups/{}/users".format(workspace_id), headers = headers, data = body)
 
-        if response.status_code != HTTP_OK:
+        if response.status_code == HTTP_OK:
+            return { "response": response.status_code }
+        else:
             log.error("Error {} -- Something went wrong when trying to update {} in the workspace {}".format(response.status_code, email, workspace_id))
+            return None
     else:
         log.error("Error 400 -- Please, make sure the access parameter is either \"Admin\", \"Contributor\" or \"Member\"")
+        return None
 
 # Report
 def get_reports(workspace_id: str) -> list:
@@ -203,6 +220,7 @@ def get_reports(workspace_id: str) -> list:
         return response.json()["value"]
     else:
         log.error("Error {} -- Something went wrong when trying to retrieve the list of reports in the workspace {}".format(response.status_code, workspace_id))
+        return None
 
 def get_report(workspace_id: str, report_id: str) -> list:
     global token
@@ -215,29 +233,34 @@ def get_report(workspace_id: str, report_id: str) -> list:
         return response.json()["value"]
     else:
         log.error("Error {} -- Something went wrong when trying to retrieve the report {} in the workspace {}".format(response.status_code, report_id, workspace_id))
+        return None
 
-def delete_report(workspace_id: str, report_id: str) -> None:
+def delete_report(workspace_id: str, report_id: str) -> dict:
     global token
     if(not verify_token()): return None
 
     headers = { "Authorization": token["bearer"] }
     response = requests.delete("https://api.powerbi.com/v1.0/myorg/groups/{}/reports/{}".format(workspace_id, report_id), headers = headers)
 
-    if response.status_code != HTTP_OK:
+    if response.status_code == HTTP_OK:
+        return { "response": response.status_code }
+    else:
         log.error("Error {} -- Something went wrong when trying to delete the report {} in the workspace {}".format(response.status_code, report_id, workspace_id))
+        return None
 
-def export_report(workspace_id: str, report_id: str, out_file: str) -> None:
+def export_report(workspace_id: str, report_id: str, out_file: str) -> dict:
     global token
     if(not verify_token()): return None
 
     headers = { "Authorization": token["bearer"] }
     response = requests.get("https://api.powerbi.com/v1.0/myorg/groups/{}/reports/{}/export".format(workspace_id, report_id), headers = headers)
 
-    with open(out_file, "wb") as file:
-        file.write(response.content)
-
-    if response.status_code != HTTP_OK:
+    if response.status_code == HTTP_OK:
+        with open(out_file, "wb") as file: file.write(response.content)
+        return { "response": response.status_code }
+    else:
         log.error("Error {} -- Something went wrong when trying to delete the report {} in the workspace {}".format(response.status_code, report_id, workspace_id))
+        return None
 
 def import_report(workspace_id: str, report_name: str, in_file: str, name_conflict: str = "CreateOrOverwrite") -> dict:
     global token
@@ -252,10 +275,12 @@ def import_report(workspace_id: str, report_name: str, in_file: str, name_confli
             return response.json()
         else:
             log.error("Error {} -- Something went wrong when trying to import the report {} in the workspace {}".format(response.status_code, in_file, workspace_id))
+            return None
     else:
         log.error("Error 400 -- Please, make sure the name_conflict parameter is either \"CreateOrOverwrite\", \"GenerateUniqueName\", \"Ignore\" or \"Overwrite\"")
+        return None
 
-def clone_report(workspace_id: str, report_id: str, dest_report_name: str, dest_workspace_id: str = None) -> None:
+def clone_report(workspace_id: str, report_id: str, dest_report_name: str, dest_workspace_id: str = None) -> dict:
     global token
     if(not verify_token()): return None
     
@@ -265,8 +290,11 @@ def clone_report(workspace_id: str, report_id: str, dest_report_name: str, dest_
 
     response = requests.post("https://api.powerbi.com/v1.0/myorg/groups/{}/reports/{}/clone".format(workspace_id, report_id), headers = headers, data = body)
 
-    if response.status_code != HTTP_OK:
+    if response.status_code == HTTP_OK:
+        return { "response": response.status_code }
+    else:
         log.error("Error {} -- Something went wrong when trying to clone the report {} in the workspace {}".format(response.status_code, report_id, workspace_id))
+        return None
 
 # Dataset
 def get_datasets(workspace_id: str) -> list:
@@ -280,6 +308,7 @@ def get_datasets(workspace_id: str) -> list:
         return response.json()["value"]
     else:
         log.error("Error {} -- Something went wrong when trying to retrieve the list of datasets in the workspace {}".format(response.status_code, workspace_id))
+        return None
 
 def get_dataset(workspace_id: str, dataset_id: str) -> list:
     global token
@@ -292,18 +321,22 @@ def get_dataset(workspace_id: str, dataset_id: str) -> list:
         return response.json()["value"]
     else:
         log.error("Error {} -- Something went wrong when trying to retrieve the dataset {} in the workspace {}".format(response.status_code, dataset_id, workspace_id))
+        return None
 
-def delete_dataset(workspace_id: str, dataset_id: str) -> None:
+def delete_dataset(workspace_id: str, dataset_id: str) -> dict:
     global token
     if(not verify_token()): return None
 
     headers = { "Authorization": token["bearer"] }
     response = requests.delete("https://api.powerbi.com/v1.0/myorg/groups/{}/datasets/{}".format(workspace_id, dataset_id), headers = headers)
 
-    if response.status_code != HTTP_OK:
+    if response.status_code == HTTP_OK:
+        return { "response": response.status_code }
+    else:
         log.error("Error {} -- Something went wrong when trying to delete the dataset {} in the workspace {}".format(response.status_code, dataset_id, workspace_id))
+        return None
 
-def refresh_dataset(workspace_id: str, dataset_id: str, notify_option: str = "NoNotification") -> None:
+def refresh_dataset(workspace_id: str, dataset_id: str, notify_option: str = "NoNotification") -> dict:
     global token
     if(not verify_token()): return None
 
@@ -312,10 +345,14 @@ def refresh_dataset(workspace_id: str, dataset_id: str, notify_option: str = "No
         body = { "notifyOption": notify_option }
         response = requests.post("https://api.powerbi.com/v1.0/myorg/groups/{}/datasets/{}/refreshes".format(workspace_id, dataset_id), headers = headers, data = body)
 
-        if response.status_code != HTTP_OK:
+        if response.status_code == HTTP_ACCEPTED:
+            return { "response": response.status_code }
+        else:
             log.error("Error {} -- Something went wrong when trying to refresh the dataset {} in the workspace {}".format(response.status_code, dataset_id, workspace_id))
+            return None
     else:
         log.error("Error 400 -- Please, make sure the notify_option parameter is either \"MailOnCompletion\", \"MailOnFailure\" or \"NoNotification\"")
+        return None
 
 # Admin
 def get_audit_logs(start_date: str, end_date: str, activity: str = None, user_id: str = None) -> list:
