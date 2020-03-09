@@ -259,7 +259,7 @@ def export_report(workspace_id: str, report_id: str, out_file: str) -> dict:
         with open(out_file, "wb") as file: file.write(response.content)
         return { "response": response.status_code }
     else:
-        log.error("Error {} -- Something went wrong when trying to delete the report {} in the workspace {}".format(response.status_code, report_id, workspace_id))
+        log.error("Error {} -- Something went wrong when trying to export the report {} in the workspace {}".format(response.status_code, report_id, workspace_id))
         return None
 
 def import_report(workspace_id: str, report_name: str, in_file: str, name_conflict: str = "CreateOrOverwrite") -> dict:
