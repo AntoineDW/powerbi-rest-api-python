@@ -230,7 +230,7 @@ def get_report(workspace_id: str, report_id: str) -> list:
     response = requests.get("https://api.powerbi.com/v1.0/myorg/groups/{}/reports/{}".format(workspace_id, report_id), headers = headers)
 
     if response.status_code == HTTP_OK:
-        return response.json()["value"]
+        return response.json()
     else:
         log.error("Error {} -- Something went wrong when trying to retrieve the report {} in the workspace {}".format(response.status_code, report_id, workspace_id))
         return None
